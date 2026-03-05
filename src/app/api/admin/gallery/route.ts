@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 import fs from "fs";
@@ -67,6 +67,11 @@ export async function GET(req: NextRequest) {
             result[cat] = files;
         });
 
+        // Ensure all categories exist even if empty
+        categories.forEach(cat => {
+            if (!result[cat]) result[cat] = [];
+        });
+
         return NextResponse.json(result);
     } catch (error) {
         console.error('Gallery API error:', error);
@@ -106,7 +111,7 @@ export async function DELETE(req: NextRequest) {
         const bucket = fullPath.substring(0, firstSlashIndex);
         const relativePath = fullPath.substring(firstSlashIndex + 1);
 
-        const { error } = await supabase.storage
+        const { error } = await supabaseAdmin.storage
             .from(bucket)
             .remove([relativePath]);
 

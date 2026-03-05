@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
         const { id, ...memberData } = body;
         console.log('Admin Team: Attempting POST with payload:', memberData);
 
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('team')
             .insert([memberData])
             .select()
@@ -59,7 +59,7 @@ export async function PUT(req: NextRequest) {
         const { id, ...updateData } = body;
         console.log(`Admin Team: Attempting PUT for ID ${id} with payload:`, updateData);
 
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('team')
             .update(updateData)
             .eq('id', id)
@@ -85,7 +85,7 @@ export async function DELETE(req: NextRequest) {
     }
     try {
         const { id } = await req.json();
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
             .from('team')
             .delete()
             .eq('id', id);

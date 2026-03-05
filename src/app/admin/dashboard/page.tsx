@@ -151,8 +151,23 @@ export default function AdminDashboard() {
 
     const handleDeleteFile = async (filePath: string) => {
         if (!confirm("Delete this file?")) return;
-        await fetch("/api/admin/gallery", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ filePath }) });
-        setUploads(prev => ({ ...prev, [selectedCategory]: (prev[selectedCategory] || []).filter(f => f !== filePath) }));
+        setGalleryMsg(null);
+        try {
+            const res = await fetch("/api/admin/gallery", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ filePath })
+            });
+            if (res.ok) {
+                setUploads(prev => ({ ...prev, [selectedCategory]: (prev[selectedCategory] || []).filter(f => f !== filePath) }));
+                setGalleryMsg({ type: "success", text: "File deleted permanently!" });
+            } else {
+                const err = await res.json();
+                setGalleryMsg({ type: "error", text: err.error || "Delete failed." });
+            }
+        } catch {
+            setGalleryMsg({ type: "error", text: "Network error. Delete failed." });
+        }
     };
 
     // --- Updates ---
@@ -190,11 +205,22 @@ export default function AdminDashboard() {
 
     const handleDeleteUpdate = async (id: string) => {
         if (!confirm("Delete this update?")) return;
-        const res = await fetch("/api/admin/updates", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
-        if (res.ok) setUpdates(prev => prev.filter(u => u.id !== id));
-        else {
-            const err = await res.json();
-            setUpdatesMsg({ type: "error", text: err.error || "Delete failed." });
+        setUpdatesMsg(null);
+        try {
+            const res = await fetch("/api/admin/updates", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id })
+            });
+            if (res.ok) {
+                setUpdates(prev => prev.filter(u => u.id !== id));
+                setUpdatesMsg({ type: "success", text: "Update deleted permanently!" });
+            } else {
+                const err = await res.json();
+                setUpdatesMsg({ type: "error", text: err.error || "Delete failed." });
+            }
+        } catch {
+            setUpdatesMsg({ type: "error", text: "Network error. Delete failed." });
         }
     };
 
@@ -229,8 +255,23 @@ export default function AdminDashboard() {
 
     const handleDeleteAthlete = async (id: string) => {
         if (!confirm("Remove this athlete?")) return;
-        await fetch("/api/admin/athletes", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
-        setAthletes(prev => prev.filter(a => a.id !== id));
+        setAthleteMsg(null);
+        try {
+            const res = await fetch("/api/admin/athletes", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id })
+            });
+            if (res.ok) {
+                setAthletes(prev => prev.filter(a => a.id !== id));
+                setAthleteMsg({ type: "success", text: "Athlete removed permanently!" });
+            } else {
+                const err = await res.json();
+                setAthleteMsg({ type: "error", text: err.error || "Delete failed." });
+            }
+        } catch {
+            setAthleteMsg({ type: "error", text: "Network error. Delete failed." });
+        }
     };
 
     // --- Team ---
@@ -264,8 +305,23 @@ export default function AdminDashboard() {
 
     const handleDeleteMember = async (id: string) => {
         if (!confirm("Remove this team member?")) return;
-        await fetch("/api/admin/team", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
-        setTeam(prev => prev.filter(m => m.id !== id));
+        setTeamMsg(null);
+        try {
+            const res = await fetch("/api/admin/team", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id })
+            });
+            if (res.ok) {
+                setTeam(prev => prev.filter(m => m.id !== id));
+                setTeamMsg({ type: "success", text: "Member removed permanently!" });
+            } else {
+                const err = await res.json();
+                setTeamMsg({ type: "error", text: err.error || "Delete failed." });
+            }
+        } catch {
+            setTeamMsg({ type: "error", text: "Network error. Delete failed." });
+        }
     };
 
     const handleSaveSettings = async (e: React.FormEvent) => {
