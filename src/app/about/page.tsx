@@ -3,6 +3,12 @@ import { Footer } from "@/components/Footer";
 import { VisionMission } from "@/components/VisionMission";
 import Link from "next/link";
 import { ArrowRight, History, Heart, Users, Target } from "lucide-react";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "About Us | ACADEMY OF SPORTS AND FINE ARTS",
+    description: "Learn about ASFA's mission to empower underprivileged, tribal, and rural athletes in India through inclusive sports training and social integration.",
+};
 
 export default function AboutPage() {
     return (
