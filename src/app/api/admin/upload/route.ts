@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase, supabaseAdmin } from "@/lib/supabase";
+import cloudinary from "@/lib/cloudinary";
 
 export const dynamic = "force-dynamic";
 
@@ -21,31 +21,35 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "File and category required" }, { status: 400 });
         }
 
-        const bucketName = (category === "athletes" || category === "team") ? "uploads" : "gallery";
         const safeName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-        const filePath = `${category}/${safeName}`;
 
         try {
             const bytes = await file.arrayBuffer();
             const buffer = Buffer.from(bytes);
 
-            const { data, error } = await supabaseAdmin.storage
-                .from(bucketName)
-                .upload(filePath, buffer, {
-                    contentType: file.type,
-                    upsert: true
-                });
+            // Upload to Cloudinary using a Promise wrapper for the stream
+            const uploadResult = await new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    {
+                        folder: `asfa/${category}`,
+                        public_id: safeName.split('.')[0],
+                        resource_type: "auto",
+                    },
+                    (error, result) => {
+                        if (error) reject(error);
+                        else resolve(result);
+                    }
+                );
+                uploadStream.end(buffer);
+            }) as any;
 
-            if (error) throw error;
-
-            const { data: { publicUrl } } = supabase.storage
-                .from(bucketName)
-                .getPublicUrl(filePath);
-
-            return NextResponse.json({ path: publicUrl, name: safeName }, { status: 201 });
-        } catch (supaError: any) {
-            console.error('Supabase upload failed:', supaError);
-            return NextResponse.json({ error: supaError.message || "Supabase upload failed" }, { status: 500 });
+            return NextResponse.json({ 
+                path: uploadResult.secure_url, 
+                name: uploadResult.public_id 
+            }, { status: 201 });
+        } catch (cloudinaryError: any) {
+            console.error('Cloudinary upload failed:', cloudinaryError);
+            return NextResponse.json({ error: cloudinaryError.message || "Cloudinary upload failed" }, { status: 500 });
         }
     } catch (error) {
         console.error('Upload API error:', error);

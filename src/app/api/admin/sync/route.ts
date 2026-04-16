@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import cloudinary from "@/lib/cloudinary";
 
 export const dynamic = "force-dynamic";
 import fs from "fs/promises";
@@ -73,9 +74,8 @@ export async function POST(req: NextRequest) {
             }
         } catch (e: any) { logs.push(`Updates file error: ${e.message}`); }
 
-        // 4. Sync Gallery (Storage)
-        // This is a bit more manual - we search public folder for category-prefixed files
-        logs.push("--- Syncing Gallery Storage ---");
+        // 4. Sync Gallery (Cloudinary)
+        logs.push("--- Syncing Gallery to Cloudinary ---");
         const categories = ["national", "deaf-national", "state", "district", "memories"];
         const publicFiles = await fs.readdir(path.join(rootPath, "public"));
 
@@ -86,17 +86,27 @@ export async function POST(req: NextRequest) {
             for (const file of matchingFiles) {
                 const filePath = path.join(rootPath, "public", file);
                 const fileBuffer = await fs.readFile(filePath);
-                const contentType = file.endsWith(".mp4") ? "video/mp4" : "image/png"; // simple heuristic
 
-                const { error } = await supabase.storage
-                    .from("gallery")
-                    .upload(`${cat}/${file}`, fileBuffer, {
-                        contentType,
-                        upsert: true
-                    });
-
-                if (error) logs.push(`Error uploading ${file}: ${error.message}`);
-                else logs.push(`Uploaded ${file} to ${cat}`);
+                try {
+                    const uploadResult = await new Promise((resolve, reject) => {
+                        const uploadStream = cloudinary.uploader.upload_stream(
+                            {
+                                folder: `asfa/${cat}`,
+                                public_id: file.split('.')[0],
+                                resource_type: "auto",
+                            },
+                            (error, result) => {
+                                if (error) reject(error);
+                                else resolve(result);
+                            }
+                        );
+                        uploadStream.end(fileBuffer);
+                    }) as any;
+                    
+                    logs.push(`Uploaded ${file} to Cloudinary folder asfa/${cat}`);
+                } catch (cloudinaryErr: any) {
+                    logs.push(`Error uploading ${file} to Cloudinary: ${cloudinaryErr.message}`);
+                }
             }
         }
 

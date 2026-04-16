@@ -10,6 +10,12 @@ const nextConfig: NextConfig = {
         remotePatterns: [
             {
                 protocol: 'https',
+                hostname: 'res.cloudinary.com',
+                port: '',
+                pathname: '/**',
+            },
+            {
+                protocol: 'https',
                 hostname: 'ykxhpcvgcutnwwkcutsp.supabase.co',
                 port: '',
                 pathname: '/storage/v1/object/public/**',
